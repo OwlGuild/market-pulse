@@ -1,3 +1,2 @@
 # market-pulse
-
-Minimal skeleton. Add real code locally with correct git identity.
+Data pipeline and ETL over job-market postings. Part of OwlGuild/DevFlow.
