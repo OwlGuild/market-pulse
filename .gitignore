@@ -1,10 +1,10 @@
-*.pyc
 __pycache__/
+*.py[cod]
 .venv/
+venv/
 .env
-.env.local
-node_modules/
-.next/
-dist/
+.env.*
+!.env.example
+output/
 .DS_Store
 *.log
