@@ -3,6 +3,7 @@
 Data pipeline that collects, cleans and analyses job-market postings so that what we build and
 what we apply for is based on evidence rather than guesses.
 
+[![CI](https://github.com/OwlGuild/market-pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/OwlGuild/market-pulse/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![PostgreSQL](https://img.shields.io/badge/postgresql-16-336791.svg)](https://www.postgresql.org/)
 [![Pipeline](https://img.shields.io/badge/stage-ETL-orange.svg)](#pipeline)
