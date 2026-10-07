@@ -5,15 +5,14 @@ what we apply for is based on evidence rather than guesses.
 
 [![CI](https://github.com/OwlGuild/market-pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/OwlGuild/market-pulse/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
-[![PostgreSQL](https://img.shields.io/badge/postgresql-16-336791.svg)](https://www.postgresql.org/)
-[![Pipeline](https://img.shields.io/badge/stage-ETL-orange.svg)](#pipeline)
+[![Pipeline](https://img.shields.io/badge/stage-ETL-orange.svg)](#roadmap)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 ## Why this exists
 
 Hiring advice online is mostly anecdote. This repository turns the question "which skills do
-these postings actually ask for?" into a query. Every number in our planning came from this
-pipeline, not from intuition.
+these postings actually ask for?" into a query. Every number in our planning came from data,
+not from intuition.
 
 ## Pipeline
 
@@ -24,40 +23,58 @@ transform normalise titles, locations and requirements into one schema
   ↓
 load      upsert into PostgreSQL, keep history so trends are measurable
   ↓
-report    aggregate frequencies, generate the market report
+report    aggregate frequencies, generate the market report   ← implemented
 ```
 
 Raw responses are kept as-is. When a parsing rule is wrong, the fix is reprocessing — the
 original is never overwritten.
 
-## What it measures
+## What works today
 
-- Skill frequency across the whole posting set
-- Skill demand by seniority and contract type
-- Which stacks appear together
-- Week-over-week movement in each demand figure
+The **report** stage is implemented and tested: it takes normalised records, counts skill
+frequency and renders a markdown table. Counts are derived at runtime, never hardcoded.
+
+```bash
+export PYTHONPATH=src
+python -m market_pulse.cli report --input output/records.json
+# | Skill  | Count | Share |
+# |--------|-------|-------|
+# | python | 2     | 100%  |
+```
+
+Stages that are not implemented exit with a clear message instead of pretending to succeed.
 
 ## Quickstart
 
 ```bash
 git clone https://github.com/OwlGuild/market-pulse.git
 cd market-pulse
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-python -m market_pulse extract
-python -m market_pulse transform
-python -m market_pulse load
-python -m market_pulse report
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt pytest
+export PYTHONPATH=src
+pytest -q
+# 5 passed
 ```
 
-## Output
+## Testing
 
-| File | Contents |
-|---|---|
-| `output/requirements.json` | structured requirement set per posting |
-| `output/requirements.csv` | the same, flattened for spreadsheets |
-| `output/market_report.md` | frequency tables and trend commentary |
+```bash
+pytest -q
+# 5 passed
+```
+
+The suite covers frequency counting, share derivation against the real total, markdown
+rendering and CLI behaviour (success, missing input, unimplemented stage). CI runs it on every
+push.
+
+## Roadmap
+
+- `extract` with rate limiting and raw-response archiving
+- `transform` normalisation and validation rules
+- `load` into PostgreSQL with history retention
+- Skill demand by seniority and contract type
+- Stacks that appear together, week over week
 
 ## Design notes
 
@@ -65,15 +82,6 @@ python -m market_pulse report
 - **Parsing is validated.** Conflicting required/nice-to-have entries are reported, not
   silently dropped.
 - **Counts are derived, never hardcoded.** Every figure in the report is computed at runtime.
-
-## Testing
-
-```bash
-pytest
-```
-
-Fixtures use captured responses from a small corpus, so a change to the parser that alters
-existing output fails until reviewed deliberately.
 
 ## Ownership
 
