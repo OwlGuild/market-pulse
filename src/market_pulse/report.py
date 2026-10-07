@@ -5,9 +5,12 @@ from typing import Any, Mapping
 
 def skill_frequency(records: list[dict[str, Any]]) -> Counter:
     counter: Counter = Counter()
-    for r in records:
-        for skill in r.get("skills", []):
-            counter[skill.lower()] += 1
+    for record in records:
+        skills = record.get("skills") or []
+        # Case-insensitive, whitespace-safe, and counted once per record so a
+        # duplicated bullet cannot inflate a skill's share of the corpus.
+        unique = {s.strip().lower() for s in skills if isinstance(s, str) and s.strip()}
+        counter.update(unique)
     return counter
 
 
