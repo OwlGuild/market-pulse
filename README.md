@@ -32,17 +32,24 @@ original is never overwritten.
 ## What works today
 
 The **report** stage is implemented and tested: it takes normalised records, counts skill
-frequency and renders a markdown table. Counts are derived at runtime, never hardcoded.
+frequency and renders a markdown table. Counts are derived at runtime, never hardcoded, and a
+skill is counted once per record so duplicated bullets cannot inflate a share.
 
 ```bash
-export PYTHONPATH=src
-python -m market_pulse.cli report --input output/records.json
-# | Skill  | Count | Share |
-# |--------|-------|-------|
-# | python | 2     | 100%  |
+PYTHONPATH=src python -m market_pulse.cli report --input examples/records.json
+# | Skill      | Count | Share |
+# |------------|-------|-------|
+# | python     | 2     | 67%   |
+# | postgresql | 1     | 33%   |
+# | django     | 1     | 33%   |
+# | typescript | 1     | 33%   |
+# | react      | 1     | 33%   |
+# | sql        | 1     | 33%   |
 ```
 
-Stages that are not implemented exit with a clear message instead of pretending to succeed.
+Stages that are not implemented exit with a clear message instead of pretending to succeed,
+and malformed input (invalid JSON, a directory, a non-array payload) fails with a one-line
+error rather than a traceback.
 
 ## Quickstart
 
@@ -51,22 +58,28 @@ git clone https://github.com/OwlGuild/market-pulse.git
 cd market-pulse
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt pytest
-export PYTHONPATH=src
+pip install -r requirements.txt
 pytest -q
-# 5 passed
+```
+
+Running the CLI needs `PYTHONPATH=src` (or `pytest.ini` does it for the tests):
+
+```bash
+PYTHONPATH=src python -m market_pulse.cli report --input examples/records.json
+# Windows PowerShell: $env:PYTHONPATH="src"; python -m market_pulse.cli report --input examples/records.json
 ```
 
 ## Testing
 
 ```bash
 pytest -q
-# 5 passed
+# 20 passed
 ```
 
-The suite covers frequency counting, share derivation against the real total, markdown
-rendering and CLI behaviour (success, missing input, unimplemented stage). CI runs it on every
-push.
+The suite covers frequency counting, share derivation against real totals, duplicate and
+whitespace safety, markdown rendering, every CLI error path (missing file, invalid JSON,
+non-array payload, directory input, unwritable output) and the stub stages. CI runs it on
+every push.
 
 ## Roadmap
 
@@ -78,10 +91,12 @@ push.
 
 ## Design notes
 
-- **Idempotent stages.** Re-running `transform` on the same raw input yields the same rows.
-- **Parsing is validated.** Conflicting required/nice-to-have entries are reported, not
-  silently dropped.
-- **Counts are derived, never hardcoded.** Every figure in the report is computed at runtime.
+- **Counts are derived, never hardcoded.** Every figure in the report is computed at runtime
+  and guarded by tests with different corpus sizes.
+- **Idempotent stages (planned).** Re-running `transform` on the same raw input will yield the
+  same rows — a Roadmap item, not yet implemented.
+- **Parsing is validated (planned).** Conflicting required/nice-to-have entries will be
+  reported, not silently dropped.
 
 ## Ownership
 
