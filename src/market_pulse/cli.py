@@ -23,6 +23,32 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _load_records(path: Path) -> list[dict] | None:
+    if not path.is_file():
+        print(f"no such file: {path}", file=sys.stderr)
+        return None
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        print(f"not valid UTF-8: {path}", file=sys.stderr)
+        return None
+    except OSError as exc:
+        print(f"cannot read {path}: {exc}", file=sys.stderr)
+        return None
+    try:
+        records = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"invalid JSON in {path}: {exc}", file=sys.stderr)
+        return None
+    if not isinstance(records, list):
+        print(f"expected a JSON array of objects in {path}", file=sys.stderr)
+        return None
+    if not all(isinstance(item, dict) for item in records):
+        print(f"every element in {path} must be a JSON object", file=sys.stderr)
+        return None
+    return records
+
+
 def run(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
 
@@ -30,16 +56,18 @@ def run(argv: list[str] | None = None) -> int:
         print(f"the {args.command} stage is not implemented yet", file=sys.stderr)
         return 2
 
-    path = Path(args.input)
-    if not path.exists():
-        print(f"no such file: {path}", file=sys.stderr)
+    records = _load_records(Path(args.input))
+    if records is None:
         return 1
 
-    records = json.loads(path.read_text(encoding="utf-8"))
     table = to_markdown(skill_frequency(records), total=len(records))
 
     if args.output:
-        Path(args.output).write_text(table + "\n", encoding="utf-8")
+        try:
+            Path(args.output).write_text(table + "\n", encoding="utf-8")
+        except OSError as exc:
+            print(f"cannot write {args.output}: {exc}", file=sys.stderr)
+            return 1
     else:
         print(table)
     return 0
