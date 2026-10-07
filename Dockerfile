@@ -5,4 +5,4 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 ENV PYTHONPATH=/app/src
-CMD ["python", "-m", "market_pulse.cli"]
+CMD ["python", "-m", "market_pulse.cli", "--help"]
