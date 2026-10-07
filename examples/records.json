@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Backend Developer",
+    "skills": ["Python", "PostgreSQL", "Django"]
+  },
+  {
+    "title": "Frontend Developer",
+    "skills": ["TypeScript", "React"]
+  },
+  {
+    "title": "Data Engineer",
+    "skills": ["Python", "SQL"]
+  }
+]
