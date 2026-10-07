@@ -6,7 +6,7 @@ RAW_DIR = Path(__file__).resolve().parents[2] / "output" / "raw"
 
 
 def extract(page: int) -> dict:
-    raise NotImplementedError("extract() is implemented in week 1")
+    raise NotImplementedError("extract() is not implemented yet (see Roadmap)")
 
 
 def save_raw(page: int, payload: dict) -> Path:
