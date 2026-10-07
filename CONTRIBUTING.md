@@ -1,4 +1,4 @@
-Contributing to OwlGuild DevFlow.
+Contributing to OwlGuild Market Pulse.
 - Small PRs
 - English commit messages (imperative)
 - One concern per commit
