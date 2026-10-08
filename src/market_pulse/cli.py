@@ -24,11 +24,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _load_records(path: Path) -> list[dict] | None:
-    if not path.is_file():
+    if not path.exists():
         print(f"no such file: {path}", file=sys.stderr)
         return None
+    if not path.is_file():
+        print(f"not a file: {path}", file=sys.stderr)
+        return None
     try:
-        raw = path.read_text(encoding="utf-8")
+        raw = path.read_text(encoding="utf-8-sig")
     except UnicodeDecodeError:
         print(f"not valid UTF-8: {path}", file=sys.stderr)
         return None
@@ -46,6 +49,18 @@ def _load_records(path: Path) -> list[dict] | None:
     if not all(isinstance(item, dict) for item in records):
         print(f"every element in {path} must be a JSON object", file=sys.stderr)
         return None
+    for index, item in enumerate(records):
+        skills = item.get("skills")
+        if skills is None:
+            continue
+        if not isinstance(skills, list) or not all(
+            isinstance(skill, str) for skill in skills
+        ):
+            print(
+                f"'skills' must be a list of strings (record {index}) in {path}",
+                file=sys.stderr,
+            )
+            return None
     return records
 
 
@@ -60,7 +75,11 @@ def run(argv: list[str] | None = None) -> int:
     if records is None:
         return 1
 
-    table = to_markdown(skill_frequency(records), total=len(records))
+    try:
+        table = to_markdown(skill_frequency(records), total=len(records))
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
 
     if args.output:
         try:
