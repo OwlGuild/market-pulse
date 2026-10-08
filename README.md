@@ -37,15 +37,18 @@ skill is counted once per record so duplicated bullets cannot inflate a share.
 
 ```bash
 PYTHONPATH=src python -m market_pulse.cli report --input examples/records.json
-# | Skill      | Count | Share |
-# |------------|-------|-------|
-# | python     | 2     | 67%   |
-# | postgresql | 1     | 33%   |
-# | django     | 1     | 33%   |
-# | typescript | 1     | 33%   |
-# | react      | 1     | 33%   |
-# | sql        | 1     | 33%   |
+# | Skill | Count | Share |
+# |---|---|---|
+# | python | 2 | 67% |
+# | postgresql | 1 | 33% |
+# | django | 1 | 33% |
+# | typescript | 1 | 33% |
+# | react | 1 | 33% |
+# | sql | 1 | 33% |
 ```
+
+Rows with equal counts appear in input order, so the same corpus always renders the same
+table regardless of interpreter hash randomisation.
 
 Stages that are not implemented exit with a clear message instead of pretending to succeed,
 and malformed input (invalid JSON, a directory, a non-array payload) fails with a one-line
@@ -73,13 +76,32 @@ PYTHONPATH=src python -m market_pulse.cli report --input examples/records.json
 
 ```bash
 pytest -q
-# 20 passed
+# 30 passed
 ```
 
 The suite covers frequency counting, share derivation against real totals, duplicate and
-whitespace safety, markdown rendering, every CLI error path (missing file, invalid JSON,
-non-array payload, directory input, unwritable output) and the stub stages. CI runs it on
-every push.
+whitespace safety, markdown rendering, every CLI error path (missing file, directory input,
+non-UTF-8 input, UTF-8 BOM input, unreadable file, invalid JSON, non-array payload, invalid
+skills shape, unwritable output), the raw-file overwrite guard, deterministic tie ordering,
+and every stub stage. CI runs it on every push, plus a Docker image build.
+
+## Docker
+
+The image ships the pipeline only (tests and examples are excluded by `.dockerignore`) and
+defaults to the CLI help:
+
+```bash
+docker build -t market-pulse .
+docker run --rm market-pulse
+# Windows PowerShell: docker run --rm market-pulse
+```
+
+To run the report against a local data file, mount it over `/data`:
+
+```bash
+docker run --rm -v "$PWD/examples:/data" market-pulse report --input /data/records.json
+# Windows PowerShell: docker run --rm -v "${PWD}\examples:/data" market-pulse report --input /data/records.json
+```
 
 ## Roadmap
 
