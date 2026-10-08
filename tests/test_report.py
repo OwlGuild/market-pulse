@@ -1,4 +1,18 @@
+import pytest
+
 from market_pulse.report import skill_frequency, to_markdown
+
+
+def test_skill_frequency_rejects_non_list_skills():
+    with pytest.raises(ValueError, match="must be a list of strings"):
+        skill_frequency([{"skills": "Python"}])
+
+
+def test_tied_counts_keep_input_order():
+    records = [{"skills": ["Go", "Rust", "Java"]}]
+    md = to_markdown(skill_frequency(records), total=1)
+    positions = [md.index(f"| {name} ") for name in ("go", "rust", "java")]
+    assert positions == sorted(positions)
 
 
 def test_skill_frequency_counts_each_skill():
