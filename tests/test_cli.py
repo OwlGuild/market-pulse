@@ -57,7 +57,44 @@ def test_report_fails_when_elements_are_not_objects(tmp_path, capsys):
 
 def test_report_fails_when_input_is_a_directory(tmp_path, capsys):
     assert run(["report", "--input", str(tmp_path)]) == 1
-    assert "no such file" in capsys.readouterr().err
+    assert "not a file" in capsys.readouterr().err
+
+
+def test_report_fails_on_non_utf8_input(tmp_path, capsys):
+    src = tmp_path / "latin1.json"
+    src.write_bytes(b'[\xff\xfe{"skills": ["Python"]}]')
+    assert run(["report", "--input", str(src)]) == 1
+    assert "not valid UTF-8" in capsys.readouterr().err
+
+
+def test_report_accepts_input_with_utf8_bom(tmp_path, capsys):
+    src = tmp_path / "bom.json"
+    src.write_bytes(b"\xef\xbb\xbf" + json.dumps([{"skills": ["Python"]}]).encode())
+    assert run(["report", "--input", str(src)]) == 0
+    assert "| python | 1 | 100% |" in capsys.readouterr().out
+
+
+def test_report_fails_when_file_cannot_be_read(tmp_path, capsys, monkeypatch):
+    src = _write(tmp_path / "records.json", json.dumps([{"skills": ["Python"]}]))
+
+    def _deny_read(*_args, **_kwargs):
+        raise OSError("permission denied")
+
+    monkeypatch.setattr("pathlib.Path.read_text", _deny_read)
+    assert run(["report", "--input", str(src)]) == 1
+    assert "cannot read" in capsys.readouterr().err
+
+
+def test_report_fails_when_skills_is_not_a_list(tmp_path, capsys):
+    src = _write(tmp_path / "skills.json", json.dumps([{"skills": "Python"}]))
+    assert run(["report", "--input", str(src)]) == 1
+    assert "'skills' must be a list of strings" in capsys.readouterr().err
+
+
+def test_report_fails_when_skills_contains_non_strings(tmp_path, capsys):
+    src = _write(tmp_path / "skills.json", json.dumps([{"skills": ["Python", 3]}]))
+    assert run(["report", "--input", str(src)]) == 1
+    assert "'skills' must be a list of strings" in capsys.readouterr().err
 
 
 def test_report_fails_when_output_directory_is_missing(tmp_path, capsys):
