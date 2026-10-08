@@ -12,5 +12,7 @@ def extract(page: int) -> dict:
 def save_raw(page: int, payload: dict) -> Path:
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     path = RAW_DIR / f"page_{page:03d}.json"
+    if path.exists():
+        raise FileExistsError(f"refusing to overwrite {path}")
     path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     return path
