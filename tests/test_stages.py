@@ -1,6 +1,9 @@
 import json
 
-from market_pulse.extract import RAW_DIR, save_raw
+import pytest
+
+from market_pulse.extract import RAW_DIR, extract, save_raw
+from market_pulse.load import upsert
 from market_pulse.transform import normalise, validate
 
 
@@ -35,3 +38,22 @@ def test_raw_dir_lives_outside_the_package():
     assert RAW_DIR.name == "raw"
     assert "output" in RAW_DIR.parts
     assert "market_pulse" not in RAW_DIR.parts
+
+
+def test_save_raw_refuses_to_overwrite(tmp_path, monkeypatch):
+    monkeypatch.setattr("market_pulse.extract.RAW_DIR", tmp_path)
+    save_raw(1, {"title": "first"})
+    with pytest.raises(FileExistsError):
+        save_raw(1, {"title": "second"})
+
+
+def test_extract_stage_raises_clearly():
+    with pytest.raises(NotImplementedError) as excinfo:
+        extract(1)
+    assert "not implemented yet" in str(excinfo.value)
+
+
+def test_load_stage_raises_clearly():
+    with pytest.raises(NotImplementedError) as excinfo:
+        upsert([])
+    assert "not implemented yet" in str(excinfo.value)
